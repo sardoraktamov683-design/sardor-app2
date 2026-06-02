@@ -1,72 +1,80 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabase'
 
+// Bilingual text helper
+const T = ({ en, uz }) => (
+  <span>
+    {en}
+    <span style={{ display: 'block', fontSize: '11px', color: '#aaa', fontWeight: 400, lineHeight: 1.2, marginTop: 1 }}>{uz}</span>
+  </span>
+)
+
 const FOOD_ITEMS = [
-  { name: 'Banan', emoji: '🍌', unit: 'ta', cal_per_unit: 90 },
-  { name: 'Tuxum', emoji: '🥚', unit: 'ta', cal_per_unit: 70 },
-  { name: 'Tovuq koʻkragi', emoji: '🍗', unit: 'g', cal_per_unit: 1.65, step: 50, max: 300 },
-  { name: 'Guruch (pishgan)', emoji: '🍚', unit: 'g', cal_per_unit: 1.3, step: 50, max: 400 },
-  { name: 'Sut', emoji: '🥛', unit: 'stakan', cal_per_unit: 60 },
-  { name: 'Yongʻoq', emoji: '🥜', unit: 'g', cal_per_unit: 6, step: 10, max: 60 },
-  { name: 'Toʻliq donli non', emoji: '🍞', unit: 'boʻlak', cal_per_unit: 80 },
-  { name: 'Tvorog/Suzma', emoji: '🧀', unit: 'g', cal_per_unit: 1.0, step: 50, max: 300 },
-  { name: 'Arahis pastasi', emoji: '🫙', unit: 'g', cal_per_unit: 5.9, step: 10, max: 60 },
-  { name: 'Olma', emoji: '🍎', unit: 'ta', cal_per_unit: 80 },
+  { name: 'Banana', nameUz: 'Banan', emoji: '🍌', unit: 'pcs', unitUz: 'ta', cal_per_unit: 90 },
+  { name: 'Egg', nameUz: 'Tuxum', emoji: '🥚', unit: 'pcs', unitUz: 'ta', cal_per_unit: 70 },
+  { name: 'Chicken breast', nameUz: 'Tovuq koʻkragi', emoji: '🍗', unit: 'g', unitUz: 'g', cal_per_unit: 1.65, step: 50, max: 300 },
+  { name: 'Rice (cooked)', nameUz: 'Guruch (pishgan)', emoji: '🍚', unit: 'g', unitUz: 'g', cal_per_unit: 1.3, step: 50, max: 400 },
+  { name: 'Milk', nameUz: 'Sut', emoji: '🥛', unit: 'glass', unitUz: 'stakan', cal_per_unit: 60 },
+  { name: 'Nuts', nameUz: 'Yongʻoq', emoji: '🥜', unit: 'g', unitUz: 'g', cal_per_unit: 6, step: 10, max: 60 },
+  { name: 'Whole grain bread', nameUz: 'Toʻliq donli non', emoji: '🍞', unit: 'slice', unitUz: 'boʻlak', cal_per_unit: 80 },
+  { name: 'Cottage cheese', nameUz: 'Tvorog/Suzma', emoji: '🧀', unit: 'g', unitUz: 'g', cal_per_unit: 1.0, step: 50, max: 300 },
+  { name: 'Peanut butter', nameUz: 'Arahis pastasi', emoji: '🫙', unit: 'g', unitUz: 'g', cal_per_unit: 5.9, step: 10, max: 60 },
+  { name: 'Apple', nameUz: 'Olma', emoji: '🍎', unit: 'pcs', unitUz: 'ta', cal_per_unit: 80 },
 ]
 
 const DAILY_CALORIE_GOAL = 2800
 const WORKOUT_DAYS = {
-  1: { name: 'Monday', label: 'Chest & Arms', calories: 350, exercises: [
-    { name: 'Warm-up (jumping jacks)', sets: 1, reps: '3 min' },
-    { name: 'Push-up (wide grip)', sets: 4, reps: 12 },
-    { name: 'Diamond push-up', sets: 3, reps: 10 },
-    { name: 'Incline push-up', sets: 3, reps: 10 },
-    { name: 'Resistance band chest fly', sets: 3, reps: 12 },
-    { name: 'Pull-up (chin-up grip)', sets: 3, reps: 'max' },
-    { name: 'Resistance band curl', sets: 4, reps: 12 },
-    { name: 'Hammer curl (band)', sets: 3, reps: 12 },
-    { name: 'Narrow push-up (tricep)', sets: 3, reps: 12 },
-    { name: 'Band overhead extension', sets: 3, reps: 12 },
-    { name: 'Cool-down stretch', sets: 1, reps: '5 min' },
+  1: { name: 'Monday', nameUz: 'Dushanba', label: 'Chest & Arms', labelUz: 'Ko\'krak va Qo\'llar', calories: 350, exercises: [
+    { name: 'Warm-up (jumping jacks)', nameUz: 'Isitish (sakrash)', sets: 1, reps: '3 min' },
+    { name: 'Push-up (wide grip)', nameUz: 'Keng qo\'lli push-up', sets: 4, reps: 12 },
+    { name: 'Diamond push-up', nameUz: 'Olmos push-up', sets: 3, reps: 10 },
+    { name: 'Incline push-up', nameUz: 'Qiya push-up', sets: 3, reps: 10 },
+    { name: 'Resistance band chest fly', nameUz: 'Rezina bilan ko\'krak', sets: 3, reps: 12 },
+    { name: 'Pull-up (chin-up grip)', nameUz: 'Turnik (kaft yuqori)', sets: 3, reps: 'max' },
+    { name: 'Resistance band curl', nameUz: 'Rezina bilan curl', sets: 4, reps: 12 },
+    { name: 'Hammer curl (band)', nameUz: 'Bolg\'a curl (rezina)', sets: 3, reps: 12 },
+    { name: 'Narrow push-up (tricep)', nameUz: 'Tor push-up (tricep)', sets: 3, reps: 12 },
+    { name: 'Band overhead extension', nameUz: 'Rezina bilan tricep', sets: 3, reps: 12 },
+    { name: 'Cool-down stretch', nameUz: 'Cho\'zish', sets: 1, reps: '5 min' },
   ]},
-  3: { name: 'Wednesday', label: 'Back & Core', calories: 400, exercises: [
-    { name: 'Warm-up', sets: 1, reps: '3 min' },
-    { name: 'Pull-up (wide grip)', sets: 4, reps: 'max' },
-    { name: 'Pull-up (narrow grip)', sets: 3, reps: 'max' },
-    { name: 'Band bent-over row', sets: 4, reps: 12 },
-    { name: 'Band straight arm pulldown', sets: 3, reps: 12 },
-    { name: 'Band shrug', sets: 4, reps: 15 },
-    { name: 'Band upright row', sets: 3, reps: 12 },
-    { name: 'Superman', sets: 4, reps: 15 },
-    { name: 'Bird-dog', sets: 3, reps: 12 },
-    { name: 'Band deadlift', sets: 4, reps: 12 },
-    { name: 'Cool-down stretch', sets: 1, reps: '5 min' },
+  3: { name: 'Wednesday', nameUz: 'Chorshanba', label: 'Back & Core', labelUz: 'Orqa va Bel', calories: 400, exercises: [
+    { name: 'Warm-up', nameUz: 'Isitish', sets: 1, reps: '3 min' },
+    { name: 'Pull-up (wide grip)', nameUz: 'Keng ushlab tortish', sets: 4, reps: 'max' },
+    { name: 'Pull-up (narrow grip)', nameUz: 'Tor ushlab tortish', sets: 3, reps: 'max' },
+    { name: 'Band bent-over row', nameUz: 'Rezina bilan qator', sets: 4, reps: 12 },
+    { name: 'Band straight arm pulldown', nameUz: 'Rezina bilan pulldown', sets: 3, reps: 12 },
+    { name: 'Band shrug', nameUz: 'Rezina bilan shrag', sets: 4, reps: 15 },
+    { name: 'Band upright row', nameUz: 'Rezina bilan tik qator', sets: 3, reps: 12 },
+    { name: 'Superman', nameUz: 'Superman', sets: 4, reps: 15 },
+    { name: 'Bird-dog', nameUz: 'Bird-dog', sets: 3, reps: 12 },
+    { name: 'Band deadlift', nameUz: 'Rezina bilan deadlift', sets: 4, reps: 12 },
+    { name: 'Cool-down stretch', nameUz: 'Cho\'zish', sets: 1, reps: '5 min' },
   ]},
-  5: { name: 'Friday', label: 'Shoulders & Legs', calories: 450, exercises: [
-    { name: 'Warm-up', sets: 1, reps: '3 min' },
-    { name: 'Band shoulder press', sets: 4, reps: 12 },
-    { name: 'Band lateral raise', sets: 4, reps: 12 },
-    { name: 'Band front raise', sets: 3, reps: 12 },
-    { name: 'Band face pull', sets: 3, reps: 15 },
-    { name: 'Squat', sets: 4, reps: 15 },
-    { name: 'Band squat', sets: 3, reps: 15 },
-    { name: 'Lunge', sets: 3, reps: '12 each' },
-    { name: 'Band glute bridge', sets: 4, reps: 15 },
-    { name: 'Calf raise', sets: 4, reps: 20 },
-    { name: 'Cool-down stretch', sets: 1, reps: '5 min' },
+  5: { name: 'Friday', nameUz: 'Juma', label: 'Shoulders & Legs', labelUz: 'Yelka va Oyoq', calories: 450, exercises: [
+    { name: 'Warm-up', nameUz: 'Isitish', sets: 1, reps: '3 min' },
+    { name: 'Band shoulder press', nameUz: 'Rezina bilan yelka press', sets: 4, reps: 12 },
+    { name: 'Band lateral raise', nameUz: 'Rezina bilan lateral', sets: 4, reps: 12 },
+    { name: 'Band front raise', nameUz: 'Rezina bilan old ko\'tarish', sets: 3, reps: 12 },
+    { name: 'Band face pull', nameUz: 'Rezina bilan face pull', sets: 3, reps: 15 },
+    { name: 'Squat', nameUz: 'Squat', sets: 4, reps: 15 },
+    { name: 'Band squat', nameUz: 'Rezina bilan squat', sets: 3, reps: 15 },
+    { name: 'Lunge', nameUz: 'Lunge', sets: 3, reps: '12 each' },
+    { name: 'Band glute bridge', nameUz: 'Rezina bilan glute bridge', sets: 4, reps: 15 },
+    { name: 'Calf raise', nameUz: 'Boldir ko\'tarish', sets: 4, reps: 20 },
+    { name: 'Cool-down stretch', nameUz: 'Cho\'zish', sets: 1, reps: '5 min' },
   ]},
 }
 
 const NAV_ITEMS = [
-  { id: 'home', label: 'Home', icon: '⌂' },
-  { id: 'todo', label: 'Tasks', icon: '✓' },
-  { id: 'food', label: 'Nutrition', icon: '◉' },
-  { id: 'workout', label: 'Workout', icon: '◈' },
-  { id: 'skills', label: 'Skills', icon: '◆' },
-  { id: 'notes', label: 'Notes', icon: '◻' },
-  { id: 'expenses', label: 'Expenses', icon: '◎' },
-  { id: 'progress', label: 'Progress', icon: '▣' },
-  { id: 'chat', label: 'AI Chat', icon: '◐' },
+  { id: 'home', label: 'Home', labelUz: 'Bosh sahifa', icon: '⌂' },
+  { id: 'todo', label: 'Tasks', labelUz: 'Vazifalar', icon: '✓' },
+  { id: 'food', label: 'Nutrition', labelUz: 'Ovqatlanish', icon: '◉' },
+  { id: 'workout', label: 'Workout', labelUz: 'Sport', icon: '◈' },
+  { id: 'skills', label: 'Skills', labelUz: 'Ko\'nikmalar', icon: '◆' },
+  { id: 'notes', label: 'Notes', labelUz: 'Eslatmalar', icon: '◻' },
+  { id: 'expenses', label: 'Expenses', labelUz: 'Xarajatlar', icon: '◎' },
+  { id: 'progress', label: 'Progress', labelUz: 'Taraqqiyot', icon: '▣' },
+  { id: 'chat', label: 'AI Chat', labelUz: 'AI Yordamchi', icon: '◐' },
 ]
 
 export default function App() {
@@ -134,7 +142,10 @@ export default function App() {
         {NAV_ITEMS.map(n => (
           <button key={n.id} onClick={() => setPage(n.id)} style={{ ...styles.navBtn, ...(page === n.id ? styles.navActive : {}) }} title={n.label}>
             <span style={styles.navIcon}>{n.icon}</span>
-            <span style={styles.navLabel}>{n.label}</span>
+            <span style={styles.navLabel}>
+              {n.label}
+              <span style={styles.navLabelUz}>{n.labelUz}</span>
+            </span>
           </button>
         ))}
       </aside>
@@ -153,26 +164,28 @@ function HomePage({ setPage, todos, totalCaloriesConsumed, caloriesBurned, calor
   const workoutToday = WORKOUT_DAYS[todayDay]
   const pendingTodos = todos.filter(t => !t.completed).length
   const calPercent = Math.min(100, Math.round((totalCaloriesConsumed / 2800) * 100))
+  const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 17 ? 'Good afternoon' : 'Good evening'
+  const greetingUz = now.getHours() < 12 ? 'Xayrli tong' : now.getHours() < 17 ? 'Xayrli kun' : 'Xayrli kech'
 
   return (
     <div style={styles.page}>
       <div style={styles.pageHeader}>
         <div>
-          <h1 style={styles.h1}>Good {now.getHours() < 12 ? 'morning' : now.getHours() < 17 ? 'afternoon' : 'evening'}, Sardor</h1>
+          <h1 style={styles.h1}>{greeting}, Sardor <span style={styles.uzText}>({greetingUz})</span></h1>
           <p style={styles.subtitle}>{dayName}, {dateStr}</p>
         </div>
       </div>
 
       <div style={styles.statsGrid}>
-        <StatCard label="Calories consumed" value={`${Math.round(totalCaloriesConsumed)}`} unit="kcal" color="#000" onClick={() => setPage('food')} />
-        <StatCard label="Burned" value={`${Math.round(caloriesBurned)}`} unit="kcal" color="#555" onClick={() => setPage('workout')} />
-        <StatCard label="Net balance" value={`${Math.round(caloriesNet)}`} unit="kcal" color={caloriesNet >= 2000 ? '#000' : '#888'} onClick={() => setPage('food')} />
-        <StatCard label="Tasks pending" value={`${pendingTodos}`} unit="tasks" color="#000" onClick={() => setPage('todo')} />
+        <StatCard label="Calories consumed" labelUz="Iste'mol qilingan" value={`${Math.round(totalCaloriesConsumed)}`} unit="kcal" color="#000" onClick={() => setPage('food')} />
+        <StatCard label="Burned" labelUz="Yoqilgan" value={`${Math.round(caloriesBurned)}`} unit="kcal" color="#555" onClick={() => setPage('workout')} />
+        <StatCard label="Net balance" labelUz="Balans" value={`${Math.round(caloriesNet)}`} unit="kcal" color={caloriesNet >= 2000 ? '#000' : '#888'} onClick={() => setPage('food')} />
+        <StatCard label="Tasks pending" labelUz="Bajarilmagan" value={`${pendingTodos}`} unit="tasks" color="#000" onClick={() => setPage('todo')} />
       </div>
 
       <div style={styles.progressBarWrap}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-          <span style={styles.labelSm}>Daily calorie goal</span>
+          <span style={styles.labelSm}>Daily calorie goal <span style={styles.uzText}>/ Kunlik kaloriya maqsadi</span></span>
           <span style={styles.labelSm}>{Math.round(totalCaloriesConsumed)} / 2800 kcal</span>
         </div>
         <div style={styles.progressTrack}>
@@ -184,7 +197,7 @@ function HomePage({ setPage, todos, totalCaloriesConsumed, caloriesBurned, calor
         <div style={styles.workoutBanner} onClick={() => setPage('workout')}>
           <span style={{ fontSize: 20 }}>◈</span>
           <div>
-            <p style={{ margin: 0, fontWeight: 500, fontSize: 15 }}>Today: {workoutToday?.label}</p>
+            <p style={{ margin: 0, fontWeight: 500, fontSize: 15 }}>Today: {workoutToday?.label} <span style={styles.uzText}>/ {workoutToday?.labelUz}</span></p>
             <p style={{ margin: 0, fontSize: 13, color: '#555' }}>{workoutToday?.exercises.length} exercises · ~{workoutToday?.calories} kcal burned</p>
           </div>
           <span style={{ marginLeft: 'auto', fontSize: 18 }}>→</span>
@@ -193,12 +206,12 @@ function HomePage({ setPage, todos, totalCaloriesConsumed, caloriesBurned, calor
 
       <div style={styles.skillsRow}>
         {[
-          { label: 'English', stars: dailyProgress?.english_stars || 0, page: 'skills' },
-          { label: 'Python / C++', stars: dailyProgress?.python_stars || 0, page: 'skills' },
-          { label: 'Sport', stars: dailyProgress?.sport_stars || 0, page: 'workout' },
+          { label: 'English', labelUz: 'Ingliz tili', stars: dailyProgress?.english_stars || 0, page: 'skills' },
+          { label: 'Python / C++', labelUz: 'Dasturlash', stars: dailyProgress?.python_stars || 0, page: 'skills' },
+          { label: 'Sport', labelUz: 'Mashq', stars: dailyProgress?.sport_stars || 0, page: 'workout' },
         ].map(s => (
           <div key={s.label} style={styles.skillCard} onClick={() => setPage(s.page)}>
-            <p style={styles.labelSm}>{s.label}</p>
+            <p style={styles.labelSm}>{s.label} <span style={styles.uzText}>/ {s.labelUz}</span></p>
             <div>{[1,2,3].map(i => <span key={i} style={{ color: i <= s.stars ? '#000' : '#ddd', fontSize: 16 }}>★</span>)}</div>
           </div>
         ))}
@@ -207,10 +220,10 @@ function HomePage({ setPage, todos, totalCaloriesConsumed, caloriesBurned, calor
   )
 }
 
-function StatCard({ label, value, unit, color, onClick }) {
+function StatCard({ label, labelUz, value, unit, color, onClick }) {
   return (
     <div style={{ ...styles.statCard, cursor: 'pointer' }} onClick={onClick}>
-      <p style={styles.statLabel}>{label}</p>
+      <p style={styles.statLabel}>{label}<br/><span style={styles.uzText}>{labelUz}</span></p>
       <p style={{ ...styles.statValue, color }}>{value}</p>
       <p style={styles.statUnit}>{unit}</p>
     </div>
@@ -245,20 +258,22 @@ function TodoPage({ todos, setTodos, supabase }) {
 
   return (
     <div style={styles.page}>
-      <h1 style={styles.h1}>Tasks</h1>
+      <h1 style={styles.h1}>Tasks <span style={styles.uzText}>/ Vazifalar</span></h1>
       <div style={styles.inputRow}>
-        <input style={styles.input} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTodo()} placeholder="Add a task..." />
+        <input style={styles.input} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTodo()} placeholder="Add a task... / Vazifa qo'sh..." />
         <select style={styles.select} value={priority} onChange={e => setPriority(e.target.value)}>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
+          <option value="high">High / Yuqori</option>
+          <option value="medium">Medium / O'rta</option>
+          <option value="low">Low / Past</option>
         </select>
-        <input style={{ ...styles.input, maxWidth: 120 }} value={category} onChange={e => setCategory(e.target.value)} placeholder="Category" />
-        <button style={styles.btnPrimary} onClick={addTodo}>Add</button>
+        <input style={{ ...styles.input, maxWidth: 120 }} value={category} onChange={e => setCategory(e.target.value)} placeholder="Category / Kategoriya" />
+        <button style={styles.btnPrimary} onClick={addTodo}>Add / Qo'sh</button>
       </div>
       <div style={styles.filterRow}>
-        {['all', 'active', 'done'].map(f => (
-          <button key={f} style={{ ...styles.filterBtn, ...(filter === f ? styles.filterActive : {}) }} onClick={() => setFilter(f)}>{f}</button>
+        {[['all','Hammasi'],['active','Faol'],['done','Bajarilgan']].map(([f, uz]) => (
+          <button key={f} style={{ ...styles.filterBtn, ...(filter === f ? styles.filterActive : {}) }} onClick={() => setFilter(f)}>
+            {f === 'all' ? 'All' : f === 'active' ? 'Active' : 'Done'} <span style={{ fontSize: 10, opacity: 0.7 }}>/ {uz}</span>
+          </button>
         ))}
       </div>
       <div style={styles.list}>
@@ -275,7 +290,7 @@ function TodoPage({ todos, setTodos, supabase }) {
             <button style={styles.deleteBtn} onClick={() => deleteTodo(t.id)}>×</button>
           </div>
         ))}
-        {filtered.length === 0 && <p style={styles.empty}>No tasks</p>}
+        {filtered.length === 0 && <p style={styles.empty}>No tasks / Vazifa yo'q</p>}
       </div>
     </div>
   )
@@ -301,33 +316,33 @@ function FoodPage({ foodLog, setFoodLog, totalCaloriesConsumed, caloriesBurned, 
 
   return (
     <div style={styles.page}>
-      <h1 style={styles.h1}>Nutrition</h1>
+      <h1 style={styles.h1}>Nutrition <span style={styles.uzText}>/ Ovqatlanish</span></h1>
 
       <div style={styles.calPanel}>
         <div style={styles.calStat}>
-          <p style={styles.calLabel}>Consumed</p>
+          <p style={styles.calLabel}>Consumed<br/><span style={styles.uzText}>Iste'mol</span></p>
           <p style={styles.calValue}>+{Math.round(totalCaloriesConsumed)}</p>
         </div>
         <div style={styles.calDivider} />
         <div style={styles.calStat}>
-          <p style={styles.calLabel}>Burned</p>
+          <p style={styles.calLabel}>Burned<br/><span style={styles.uzText}>Yoqilgan</span></p>
           <p style={styles.calValue}>-{Math.round(caloriesBurned)}</p>
         </div>
         <div style={styles.calDivider} />
         <div style={styles.calStat}>
-          <p style={styles.calLabel}>Net</p>
+          <p style={styles.calLabel}>Net<br/><span style={styles.uzText}>Balans</span></p>
           <p style={styles.calValue}>{Math.round(caloriesNet)}</p>
         </div>
         <div style={styles.calDivider} />
         <div style={styles.calStat}>
-          <p style={styles.calLabel}>Goal</p>
+          <p style={styles.calLabel}>Goal<br/><span style={styles.uzText}>Maqsad</span></p>
           <p style={styles.calValue}>2800</p>
         </div>
       </div>
 
       <div style={styles.progressBarWrap}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-          <span style={styles.labelSm}>Progress</span>
+          <span style={styles.labelSm}>Progress / Taraqqiyot</span>
           <span style={styles.labelSm}>{calPercent}%</span>
         </div>
         <div style={styles.progressTrack}>
@@ -335,7 +350,7 @@ function FoodPage({ foodLog, setFoodLog, totalCaloriesConsumed, caloriesBurned, 
         </div>
       </div>
 
-      <h2 style={styles.h2}>Daily food goals</h2>
+      <h2 style={styles.h2}>Daily food goals <span style={styles.uzText}>/ Kunlik oziq-ovqat maqsadlari</span></h2>
       <div style={styles.foodGrid}>
         {FOOD_ITEMS.map(item => {
           const logged = foodLog.filter(f => f.food_name === item.name).reduce((s, f) => s + Number(f.quantity), 0)
@@ -346,7 +361,7 @@ function FoodPage({ foodLog, setFoodLog, totalCaloriesConsumed, caloriesBurned, 
         })}
       </div>
 
-      <h2 style={styles.h2}>Today's log</h2>
+      <h2 style={styles.h2}>Today's log <span style={styles.uzText}>/ Bugungi yozuv</span></h2>
       <div style={styles.list}>
         {foodLog.map(f => (
           <div key={f.id} style={styles.listItem}>
@@ -355,7 +370,7 @@ function FoodPage({ foodLog, setFoodLog, totalCaloriesConsumed, caloriesBurned, 
             <button style={styles.deleteBtn} onClick={() => removeFood(f.id)}>×</button>
           </div>
         ))}
-        {foodLog.length === 0 && <p style={styles.empty}>No food logged today</p>}
+        {foodLog.length === 0 && <p style={styles.empty}>No food logged today / Bugun hech narsa yozilmagan</p>}
       </div>
     </div>
   )
@@ -367,9 +382,10 @@ function FoodCard({ item, logged, isGram, max, step, onLog }) {
     <div style={styles.foodCard}>
       <span style={{ fontSize: 24 }}>{item.emoji}</span>
       <div style={{ flex: 1 }}>
-        <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 500 }}>{item.name}</p>
+        <p style={{ margin: '0 0 1px', fontSize: 14, fontWeight: 500 }}>{item.name}</p>
+        <p style={{ margin: '0 0 1px', fontSize: 11, color: '#aaa' }}>{item.nameUz}</p>
         <p style={{ margin: 0, fontSize: 12, color: '#888' }}>{Math.round(item.cal_per_unit * (isGram ? 100 : 1))} kcal/{isGram ? '100g' : item.unit}</p>
-        <p style={{ margin: '4px 0 0', fontSize: 12, color: '#555' }}>Today: {logged} {item.unit}</p>
+        <p style={{ margin: '4px 0 0', fontSize: 12, color: '#555' }}>Today / Bugun: {logged} {item.unit}</p>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <button style={styles.qtyBtn} onClick={() => setQty(q => Math.max(step, q - step))}>−</button>
@@ -413,17 +429,20 @@ function WorkoutPage({ workoutLog, setWorkoutLog, dailyProgress, setDailyProgres
 
   return (
     <div style={styles.page}>
-      <h1 style={styles.h1}>Workout</h1>
+      <h1 style={styles.h1}>Workout <span style={styles.uzText}>/ Sport</span></h1>
       {!isWorkoutDay ? (
         <div style={styles.restDay}>
           <p style={{ fontSize: 48, margin: 0 }}>◇</p>
-          <p style={{ fontSize: 18, fontWeight: 500 }}>Rest day</p>
+          <p style={{ fontSize: 18, fontWeight: 500 }}>Rest day / Dam olish kuni</p>
           <p style={{ color: '#888', fontSize: 14 }}>Next workout: {todayDay < 1 ? 'Monday' : todayDay < 3 ? 'Wednesday' : todayDay < 5 ? 'Friday' : 'Monday'}</p>
         </div>
       ) : (
         <>
           <div style={styles.workoutHeader}>
-            <h2 style={{ ...styles.h2, margin: 0 }}>{workout.label}</h2>
+            <div>
+              <h2 style={{ ...styles.h2, margin: 0 }}>{workout.label}</h2>
+              <p style={{ margin: '2px 0 0', fontSize: 12, color: '#aaa' }}>{workout.labelUz}</p>
+            </div>
             <p style={{ margin: 0, fontSize: 13, color: '#888' }}>~{workout.calories} kcal if completed</p>
           </div>
 
@@ -437,7 +456,8 @@ function WorkoutPage({ workoutLog, setWorkoutLog, dailyProgress, setDailyProgres
                   </button>
                   <div style={{ flex: 1 }}>
                     <span style={{ fontSize: 15, textDecoration: done ? 'line-through' : 'none' }}>{ex.name}</span>
-                    <span style={{ fontSize: 12, color: '#888', marginLeft: 8 }}>{ex.sets} × {ex.reps}</span>
+                    <span style={{ display: 'block', fontSize: 11, color: '#aaa' }}>{ex.nameUz}</span>
+                    <span style={{ fontSize: 12, color: '#888' }}>{ex.sets} × {ex.reps}</span>
                   </div>
                 </div>
               )
@@ -445,7 +465,7 @@ function WorkoutPage({ workoutLog, setWorkoutLog, dailyProgress, setDailyProgres
           </div>
 
           <div style={styles.starsSection}>
-            <p style={styles.labelSm}>Rate today's workout</p>
+            <p style={styles.labelSm}>Rate today's workout / Bugungi mashqni baholang</p>
             <div style={{ display: 'flex', gap: 8 }}>
               {[1, 2, 3].map(s => (
                 <button key={s} style={{ ...styles.starBtn, color: s <= stars ? '#000' : '#ddd' }} onClick={() => saveStars(s)}>★</button>
@@ -475,30 +495,33 @@ function SkillsPage({ dailyProgress, setDailyProgress, today, supabase }) {
 
   const skillSections = [
     {
-      title: 'English', field: 'english_stars', stars: engStars, setter: setEngStars,
+      title: 'English', titleUz: 'Ingliz tili', field: 'english_stars', stars: engStars, setter: setEngStars,
       levels: [
-        { level: 1, label: 'Beginner tasks', items: ['Learn 10 new words', 'Practice alphabet & pronunciation', 'Watch a short English video'] },
-        { level: 2, label: 'Intermediate tasks', items: ['Read a short English text', 'Write 5 simple sentences', 'Listen to a podcast for 15 min'] },
-        { level: 3, label: 'Advanced tasks', items: ['Have a 10-min conversation', 'Write a paragraph essay', 'Watch a movie without subtitles'] },
+        { level: 1, label: 'Beginner', labelUz: 'Boshlang\'ich', items: ['Learn 10 new words / 10 ta yangi so\'z', 'Practice alphabet / Alifbo mashq', 'Watch a short video / Qisqa video'] },
+        { level: 2, label: 'Intermediate', labelUz: 'O\'rta', items: ['Read a short text / Qisqa matn', 'Write 5 sentences / 5 ta gap', 'Listen 15 min / 15 daqiqa tinglash'] },
+        { level: 3, label: 'Advanced', labelUz: 'Yuqori', items: ['10-min conversation / 10 daqiqa suhbat', 'Write a paragraph / Paragraf yozish', 'Movie without subs / Subtitrsiז kino'] },
       ]
     },
     {
-      title: 'Python / C++', field: 'python_stars', stars: pyStars, setter: setPyStars,
+      title: 'Python / C++', titleUz: 'Dasturlash', field: 'python_stars', stars: pyStars, setter: setPyStars,
       levels: [
-        { level: 1, label: 'Basics', items: ['Variables & data types', 'Print statements & input', 'Basic arithmetic operations'] },
-        { level: 2, label: 'Control flow', items: ['If/else conditions', 'For & while loops', 'Simple functions'] },
-        { level: 3, label: 'Intermediate', items: ['Lists, dicts, tuples', 'File reading/writing', 'Object-oriented basics'] },
+        { level: 1, label: 'Basics', labelUz: 'Asoslar', items: ['Variables / O\'zgaruvchilar', 'Print & input / Chiqarish va kiritish', 'Arithmetic / Arifmetika'] },
+        { level: 2, label: 'Control flow', labelUz: 'Boshqaruv', items: ['If/else conditions / Shartlar', 'For & while loops / Sikllar', 'Simple functions / Oddiy funksiyalar'] },
+        { level: 3, label: 'Intermediate', labelUz: 'O\'rta daraja', items: ['Lists & dicts / Ro\'yxat va lug\'at', 'File operations / Fayl ishlash', 'OOP basics / OOP asoslari'] },
       ]
     }
   ]
 
   return (
     <div style={styles.page}>
-      <h1 style={styles.h1}>Skills</h1>
+      <h1 style={styles.h1}>Skills <span style={styles.uzText}>/ Ko'nikmalar</span></h1>
       {skillSections.map(s => (
         <div key={s.title} style={{ marginBottom: 32 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h2 style={{ ...styles.h2, margin: 0 }}>{s.title}</h2>
+            <div>
+              <h2 style={{ ...styles.h2, margin: 0 }}>{s.title}</h2>
+              <p style={{ margin: 0, fontSize: 11, color: '#aaa' }}>{s.titleUz}</p>
+            </div>
             <div style={{ display: 'flex', gap: 6 }}>
               {[1,2,3].map(n => (
                 <button key={n} style={{ ...styles.starBtn, color: n <= s.stars ? '#000' : '#ddd' }} onClick={() => saveStars(s.field, n, s.setter)}>★</button>
@@ -507,7 +530,7 @@ function SkillsPage({ dailyProgress, setDailyProgress, today, supabase }) {
           </div>
           {s.levels.map(lv => (
             <div key={lv.level} style={{ ...styles.skillLevel, borderLeft: `2px solid ${lv.level <= s.stars ? '#000' : '#eee'}` }}>
-              <p style={{ margin: '0 0 6px', fontWeight: 500, fontSize: 14 }}>Level {lv.level} — {lv.label}</p>
+              <p style={{ margin: '0 0 2px', fontWeight: 500, fontSize: 14 }}>Level {lv.level} — {lv.label} <span style={styles.uzText}>/ {lv.labelUz}</span></p>
               {lv.items.map(item => (
                 <p key={item} style={{ margin: '2px 0', fontSize: 13, color: '#555' }}>· {item}</p>
               ))}
@@ -548,8 +571,8 @@ function NotesPage({ notes, setNotes, supabase }) {
   return (
     <div style={styles.page}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h1 style={{ ...styles.h1, margin: 0 }}>Notes</h1>
-        <button style={styles.btnPrimary} onClick={newNote}>+ New</button>
+        <h1 style={{ ...styles.h1, margin: 0 }}>Notes <span style={styles.uzText}>/ Eslatmalar</span></h1>
+        <button style={styles.btnPrimary} onClick={newNote}>+ New / Yangi</button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 16, height: 500 }}>
         <div style={{ borderRight: '1px solid #eee', paddingRight: 12, overflowY: 'auto' }}>
@@ -560,12 +583,12 @@ function NotesPage({ notes, setNotes, supabase }) {
               <button style={{ ...styles.deleteBtn, marginTop: 4 }} onClick={e => { e.stopPropagation(); deleteNote(n.id) }}>×</button>
             </div>
           ))}
-          {notes.length === 0 && <p style={styles.empty}>No notes</p>}
+          {notes.length === 0 && <p style={styles.empty}>No notes / Eslatma yo'q</p>}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <input style={styles.input} value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" />
-          <textarea style={{ ...styles.input, flex: 1, resize: 'none', fontFamily: 'DM Sans', lineHeight: 1.6 }} value={content} onChange={e => setContent(e.target.value)} placeholder="Write your note..." />
-          <button style={styles.btnPrimary} onClick={saveNote}>Save</button>
+          <input style={styles.input} value={title} onChange={e => setTitle(e.target.value)} placeholder="Title / Sarlavha" />
+          <textarea style={{ ...styles.input, flex: 1, resize: 'none', fontFamily: 'DM Sans', lineHeight: 1.6 }} value={content} onChange={e => setContent(e.target.value)} placeholder="Write your note... / Eslatmangizni yozing..." />
+          <button style={styles.btnPrimary} onClick={saveNote}>Save / Saqlash</button>
         </div>
       </div>
     </div>
@@ -601,26 +624,26 @@ function ExpensesPage({ expenses, setExpenses, supabase }) {
 
   return (
     <div style={styles.page}>
-      <h1 style={styles.h1}>Expenses</h1>
+      <h1 style={styles.h1}>Expenses <span style={styles.uzText}>/ Xarajatlar</span></h1>
       <div style={styles.statsGrid}>
-        <StatCard label="Total UZS" value={totalUZS.toLocaleString()} unit="so'm" color="#000" />
-        <StatCard label="Total USD" value={`$${totalUSD.toFixed(2)}`} unit="dollar" color="#000" />
+        <StatCard label="Total UZS" labelUz="Jami so'm" value={totalUZS.toLocaleString()} unit="so'm" color="#000" />
+        <StatCard label="Total USD" labelUz="Jami dollar" value={`$${totalUSD.toFixed(2)}`} unit="dollar" color="#000" />
       </div>
 
       <div style={styles.inputRow}>
-        <input style={styles.input} value={title} onChange={e => setTitle(e.target.value)} placeholder="Description" />
-        <input style={{ ...styles.input, maxWidth: 120 }} type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" />
+        <input style={styles.input} value={title} onChange={e => setTitle(e.target.value)} placeholder="Description / Tavsif" />
+        <input style={{ ...styles.input, maxWidth: 120 }} type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount / Summa" />
         <select style={styles.select} value={currency} onChange={e => setCurrency(e.target.value)}>
           <option value="UZS">UZS</option>
           <option value="USD">USD</option>
         </select>
-        <input style={{ ...styles.input, maxWidth: 120 }} value={category} onChange={e => setCategory(e.target.value)} placeholder="Category" />
-        <button style={styles.btnPrimary} onClick={addExpense}>Add</button>
+        <input style={{ ...styles.input, maxWidth: 120 }} value={category} onChange={e => setCategory(e.target.value)} placeholder="Category / Kategoriya" />
+        <button style={styles.btnPrimary} onClick={addExpense}>Add / Qo'sh</button>
       </div>
 
       {Object.keys(byCategory).length > 0 && (
         <div style={{ marginBottom: 20 }}>
-          <h2 style={styles.h2}>By category</h2>
+          <h2 style={styles.h2}>By category <span style={styles.uzText}>/ Kategoriya bo'yicha</span></h2>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {Object.entries(byCategory).map(([cat, total]) => (
               <div key={cat} style={styles.catBadge}>
@@ -644,7 +667,7 @@ function ExpensesPage({ expenses, setExpenses, supabase }) {
             <button style={styles.deleteBtn} onClick={() => deleteExpense(e.id)}>×</button>
           </div>
         ))}
-        {expenses.length === 0 && <p style={styles.empty}>No expenses yet</p>}
+        {expenses.length === 0 && <p style={styles.empty}>No expenses yet / Hali xarajat yo'q</p>}
       </div>
     </div>
   )
@@ -661,7 +684,7 @@ function ProgressPage({ supabase }) {
 
   return (
     <div style={styles.page}>
-      <h1 style={styles.h1}>Progress</h1>
+      <h1 style={styles.h1}>Progress <span style={styles.uzText}>/ Taraqqiyot</span></h1>
       <div style={styles.list}>
         {history.map(d => (
           <div key={d.id} style={styles.progressItem}>
@@ -672,7 +695,7 @@ function ProgressPage({ supabase }) {
                 <span style={{ fontSize: 13 }}>English {'★'.repeat(d.english_stars || 0)}{'☆'.repeat(3 - (d.english_stars || 0))}</span>
                 <span style={{ fontSize: 13 }}>Python {'★'.repeat(d.python_stars || 0)}{'☆'.repeat(3 - (d.python_stars || 0))}</span>
               </div>
-              {d.calories_burned > 0 && <span style={{ fontSize: 12, color: '#888' }}>-{d.calories_burned} kcal burned</span>}
+              {d.calories_burned > 0 && <span style={{ fontSize: 12, color: '#888' }}>-{d.calories_burned} kcal</span>}
             </div>
             {workoutHistory.filter(w => w.workout_date === d.progress_date).length > 0 && (
               <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
@@ -685,7 +708,7 @@ function ProgressPage({ supabase }) {
             )}
           </div>
         ))}
-        {history.length === 0 && <p style={styles.empty}>No progress data yet. Start tracking!</p>}
+        {history.length === 0 && <p style={styles.empty}>No progress data yet / Hali ma'lumot yo'q. Start tracking!</p>}
       </div>
     </div>
   )
@@ -693,7 +716,7 @@ function ProgressPage({ supabase }) {
 
 function ChatPage({ todos, setTodos, foodLog, dailyProgress, setDailyProgress, setPage, supabase, loadAll }) {
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Salom Sardor! Men sizning shaxsiy AI assistantingizman. Dasturni boshqarish, sport, ovqat, ingliz tili yoki Python haqida savol bering. Masalan: \"Vazifa qo'sh: kitob o'qi\" yoki \"Bugungi kaloriyam qancha?\"" }
+    { role: 'assistant', content: "Salom Sardor! Men sizning shaxsiy AI assistantingizman. Dasturni boshqarish, sport, ovqat, ingliz tili yoki Python haqida savol bering.\n\nMasalan:\n• \"Vazifa qo'sh: kitob o'qi\"\n• \"Bugungi kaloriyam qancha?\"\n• \"Sport bo'limiga o't\"\n• \"Push-up texnikasini tushuntir\"" }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -710,7 +733,7 @@ function ChatPage({ todos, setTodos, foodLog, dailyProgress, setDailyProgress, s
 
     try {
       const context = `
-You are a personal AI assistant embedded in Sardor's life dashboard app.
+You are a personal AI assistant embedded in Sardor's life dashboard app. You speak Uzbek primarily.
 Current data:
 - Todos: ${JSON.stringify(todos.slice(0, 10))}
 - Today's food log: ${JSON.stringify(foodLog.slice(0, 10))}
@@ -720,15 +743,16 @@ Current data:
 
 You can help Sardor with:
 1. App management: add/remove tasks, navigate to sections
-2. Workout advice (he uses pull-up bar + resistance bands, 62kg, 176cm, 19 years old, goal: muscle building)
-3. Nutrition advice (gaining weight/muscle, calorie goal 2800 kcal/day)
+2. Workout advice (pull-up bar + resistance bands, 62kg, 176cm, 19 years old, goal: muscle building like physique in reference photo - 183cm, 85-90kg, 8-10% body fat, narrow waist, wide shoulders, 6-pack)
+3. Nutrition advice (gaining weight/muscle, calorie goal 2800 kcal/day, foods: banana 90kcal, egg 70kcal, chicken 165kcal/100g, rice 130kcal/100g, milk 60kcal/glass, nuts 600kcal/100g, bread 80kcal/slice, cottage cheese 100kcal/100g, peanut butter 590kcal/100g, apple 80kcal)
 4. English learning (beginner/elementary level)
 5. Python/C++ learning (beginner level)
-6. General motivation and advice
+6. General motivation, advice, and life coaching
 
-Respond in the same language the user writes in (Uzbek or English).
-Be concise and helpful. If asked to add a task, say you'll add it and output: [ACTION:ADD_TODO:task_title]
-If asked to go to a section, output: [ACTION:NAVIGATE:section_name] where section_name is one of: home, todo, food, workout, skills, notes, expenses, progress
+ALWAYS respond in Uzbek language unless user writes in English.
+Be concise, friendly, and motivating.
+If asked to add a task, say you added it and output: [ACTION:ADD_TODO:task_title]
+If asked to navigate to a section, output: [ACTION:NAVIGATE:section_name] where section_name is: home, todo, food, workout, skills, notes, expenses, progress
       `
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -746,7 +770,6 @@ If asked to go to a section, output: [ACTION:NAVIGATE:section_name] where sectio
       const data = await response.json()
       let reply = data.content?.[0]?.text || 'Xatolik yuz berdi'
 
-      // Handle actions
       if (reply.includes('[ACTION:ADD_TODO:')) {
         const match = reply.match(/\[ACTION:ADD_TODO:(.+?)\]/)
         if (match) {
@@ -773,19 +796,19 @@ If asked to go to a section, output: [ACTION:NAVIGATE:section_name] where sectio
 
   return (
     <div style={{ ...styles.page, display: 'flex', flexDirection: 'column', height: '90vh' }}>
-      <h1 style={styles.h1}>AI Assistant</h1>
+      <h1 style={styles.h1}>AI Assistant <span style={styles.uzText}>/ AI Yordamchi</span></h1>
       <div style={styles.chatBox}>
         {messages.map((m, i) => (
           <div key={i} style={{ ...styles.chatMsg, alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', background: m.role === 'user' ? '#000' : '#f5f5f5', color: m.role === 'user' ? '#fff' : '#000' }}>
             {m.content}
           </div>
         ))}
-        {loading && <div style={{ ...styles.chatMsg, alignSelf: 'flex-start', background: '#f5f5f5', color: '#aaa' }}>...</div>}
+        {loading && <div style={{ ...styles.chatMsg, alignSelf: 'flex-start', background: '#f5f5f5', color: '#aaa' }}>Yozmoqda...</div>}
         <div ref={bottomRef} />
       </div>
       <div style={styles.chatInputRow}>
-        <input style={{ ...styles.input, flex: 1 }} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Ask me anything or give a command..." />
-        <button style={styles.btnPrimary} onClick={sendMessage} disabled={loading}>Send</button>
+        <input style={{ ...styles.input, flex: 1 }} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Savol bering yoki buyruq bering... / Ask or command..." />
+        <button style={styles.btnPrimary} onClick={sendMessage} disabled={loading}>Yuborish / Send</button>
       </div>
     </div>
   )
@@ -793,21 +816,23 @@ If asked to go to a section, output: [ACTION:NAVIGATE:section_name] where sectio
 
 const styles = {
   app: { display: 'flex', minHeight: '100vh', fontFamily: 'DM Sans, sans-serif', background: '#fafaf8', color: '#111' },
-  sidebar: { width: 200, background: '#fff', borderRight: '1px solid #eee', display: 'flex', flexDirection: 'column', padding: '20px 0', position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 100 },
+  sidebar: { width: 200, background: '#fff', borderRight: '1px solid #eee', display: 'flex', flexDirection: 'column', padding: '20px 0', position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 100, overflowY: 'auto' },
   logo: { fontSize: 24, fontWeight: 600, textAlign: 'center', marginBottom: 24, letterSpacing: -1 },
-  navBtn: { display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#888', textAlign: 'left', transition: 'all 0.15s' },
+  navBtn: { display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '8px 20px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#888', textAlign: 'left', transition: 'all 0.15s' },
   navActive: { color: '#000', background: '#f5f5f5', fontWeight: 500 },
-  navIcon: { fontSize: 14, width: 16 },
-  navLabel: {},
+  navIcon: { fontSize: 14, width: 16, flexShrink: 0 },
+  navLabel: { display: 'flex', flexDirection: 'column' },
+  navLabelUz: { fontSize: 10, color: '#bbb', fontWeight: 400 },
   main: { marginLeft: 200, flex: 1, padding: '0 0 40px' },
   page: { maxWidth: 800, margin: '0 auto', padding: '40px 32px' },
   pageHeader: { marginBottom: 32 },
   h1: { fontSize: 28, fontWeight: 500, margin: '0 0 4px', letterSpacing: -0.5 },
   h2: { fontSize: 18, fontWeight: 500, margin: '24px 0 12px', letterSpacing: -0.3 },
   subtitle: { fontSize: 14, color: '#888', margin: 0 },
+  uzText: { fontSize: '0.75em', color: '#bbb', fontWeight: 400 },
   statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 },
-  statCard: { background: '#fff', border: '1px solid #eee', borderRadius: 10, padding: '16px', },
-  statLabel: { fontSize: 12, color: '#aaa', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: 0.5 },
+  statCard: { background: '#fff', border: '1px solid #eee', borderRadius: 10, padding: '16px' },
+  statLabel: { fontSize: 11, color: '#aaa', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1.4 },
   statValue: { fontSize: 26, fontWeight: 500, margin: '0 0 2px', letterSpacing: -1 },
   statUnit: { fontSize: 12, color: '#aaa', margin: 0 },
   progressBarWrap: { marginBottom: 24 },
@@ -820,7 +845,7 @@ const styles = {
   inputRow: { display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' },
   input: { padding: '9px 12px', border: '1px solid #eee', borderRadius: 8, fontSize: 14, fontFamily: 'DM Sans', outline: 'none', flex: 1, background: '#fff', color: '#111' },
   select: { padding: '9px 12px', border: '1px solid #eee', borderRadius: 8, fontSize: 14, fontFamily: 'DM Sans', background: '#fff', color: '#111', cursor: 'pointer' },
-  btnPrimary: { padding: '9px 18px', background: '#000', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer', fontFamily: 'DM Sans', fontWeight: 500 },
+  btnPrimary: { padding: '9px 18px', background: '#000', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer', fontFamily: 'DM Sans', fontWeight: 500, whiteSpace: 'nowrap' },
   btnSmall: { padding: '4px 10px', background: '#000', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, cursor: 'pointer' },
   filterRow: { display: 'flex', gap: 6, marginBottom: 16 },
   filterBtn: { padding: '6px 14px', border: '1px solid #eee', borderRadius: 20, fontSize: 13, cursor: 'pointer', background: '#fff', color: '#888' },
@@ -833,7 +858,7 @@ const styles = {
   empty: { color: '#bbb', fontSize: 14, textAlign: 'center', padding: '32px 0', margin: 0 },
   calPanel: { display: 'flex', background: '#fff', border: '1px solid #eee', borderRadius: 12, padding: '20px', marginBottom: 20, gap: 0 },
   calStat: { flex: 1, textAlign: 'center' },
-  calLabel: { fontSize: 12, color: '#aaa', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: 0.5 },
+  calLabel: { fontSize: 11, color: '#aaa', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1.4 },
   calValue: { fontSize: 22, fontWeight: 500, margin: 0, letterSpacing: -0.5 },
   calDivider: { width: 1, background: '#eee', margin: '0 8px' },
   foodGrid: { display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 24 },
@@ -843,7 +868,7 @@ const styles = {
   starBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: 28, padding: '0 2px', transition: 'color 0.15s' },
   restDay: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', gap: 8, color: '#888' },
   workoutHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, padding: '16px', background: '#fff', border: '1px solid #eee', borderRadius: 10 },
-  skillLevel: { padding: '10px 16px', marginBottom: 8, borderLeft: '2px solid #eee' },
+  skillLevel: { padding: '10px 16px', marginBottom: 8 },
   noteItem: { padding: '10px', borderRadius: 8, cursor: 'pointer', marginBottom: 4, position: 'relative' },
   progressItem: { padding: '12px', background: '#fff', border: '1px solid #f0f0f0', borderRadius: 8, marginBottom: 4 },
   chatBox: { flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, padding: '16px', background: '#fff', border: '1px solid #eee', borderRadius: 12, marginBottom: 12 },
